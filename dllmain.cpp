@@ -12,6 +12,30 @@ DWORD WINAPI MainThread(HMODULE hModule)
     freopen_s(&f, "CONOUT$", "w", stdout);
 
     std::cout << "1nternal" << std::endl;
+
+    // Get addr of .exe module
+    uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
+
+    // Main cheat loop
+    while (true)
+    {
+        if (GetAsyncKeyState(VK_END) & 1)
+            break;
+
+        uintptr_t* LocalPlayerPtr = (uintptr_t*)(moduleBase + 0x10F4F4);
+
+        if (LocalPlayerPtr)
+            std::cout << "Health: " << *(int*)(*LocalPlayerPtr + 0xF8) << std::endl;
+
+        Sleep(5); // Preserve some resources
+    }
+
+    // Cleanup
+    fclose(f);
+    FreeConsole();
+    FreeLibraryAndExitThread(hModule, 0);
+    
+    return 0;
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
