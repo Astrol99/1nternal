@@ -1,5 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
+#include "structs.h"
 #include <iostream>
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -21,11 +22,6 @@ DWORD WINAPI MainThread(HMODULE hModule)
     {
         if (GetAsyncKeyState(VK_END) & 1)
             break;
-
-        uintptr_t* LocalPlayerPtr = (uintptr_t*)(moduleBase + 0x10F4F4);
-
-        if (LocalPlayerPtr)
-            std::cout << "Health: " << *(int*)(*LocalPlayerPtr + 0xF8) << std::endl;
 
         Sleep(5); // Preserve some resources
     }
