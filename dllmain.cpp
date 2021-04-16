@@ -26,7 +26,7 @@ DWORD WINAPI MainThread(HMODULE hModule)
         Game* game = new Game;
         game = game->GetInstance();
 
-        std::cout << game->m_LocalPlayer->health << std::endl;
+        std::cout << game->m_LocalPlayer->m_Health << std::endl;
 
         Sleep(5); // Preserve some resources
     }
