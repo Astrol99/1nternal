@@ -4,6 +4,17 @@
 #include <iostream>
 #include <Windows.h>
 #include <TlHelp32.h>
+#include <cmath>
+
+// Make src the origin (0,0,0) relative to dst
+Vec3 normalize(Vec3 src, Vec3 dst)
+{
+    return Vec3{
+        dst.x - src.x,
+        dst.y - src.y,
+        dst.z - dst.z
+    };
+}
 
 DWORD WINAPI MainThread(HMODULE hModule)
 {
@@ -26,7 +37,13 @@ DWORD WINAPI MainThread(HMODULE hModule)
         Game* game = new Game;
         game = game->GetInstance();
 
-        std::cout << game->m_LocalPlayer->m_Health << std::endl;
+        if (game->m_LocalPlayer->m_IsShooting)
+        {
+            Vec3 test = { 120, 120, 3.5 };
+            Vec3 relative = normalize(game->m_LocalPlayer->m_HeadPos, test);
+
+            std::cout << relative.x << " / " << relative.y << " / " << relative.z << std::endl;;
+        }
 
         Sleep(5); // Preserve some resources
     }
