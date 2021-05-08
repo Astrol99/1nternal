@@ -51,7 +51,8 @@ DWORD WINAPI MainThread(HMODULE hModule)
     }
 
     // Cleanup
-    fclose(f);
+    if (f)
+        fclose(f);
     FreeConsole();
     FreeLibraryAndExitThread(hModule, 0);
     
@@ -66,7 +67,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, 0, nullptr));
+    {
+        HANDLE hThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, 0, nullptr);
+        if (hThread)
+            CloseHandle(hThread);
+    }
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
     case DLL_PROCESS_DETACH:
@@ -74,4 +79,3 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     }
     return TRUE;
 }
-
