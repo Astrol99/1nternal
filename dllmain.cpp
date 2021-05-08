@@ -6,7 +6,7 @@
 #include <TlHelp32.h>
 #include <cmath>
 
-// Euclidian distance
+// 3D Euclidian distance forumula function
 float dist(Vec3* src, Vec3* dst)
 {
     // Normalize src to the origin (0,0,0) relative to dst
@@ -16,7 +16,32 @@ float dist(Vec3* src, Vec3* dst)
         dst->z - dst->z
     };
 
-    return sqrtf(pow(normalized.x, 2) + pow(normalized.y, 2) + pow(normalized.z, 2));
+    return sqrtf(powf(normalized.x, 2) + powf(normalized.y, 2) + powf(normalized.z, 2));
+}
+
+Player* getClosestPlayer(Game* game)
+{
+    Player* closest = nullptr;
+
+    for (int i = 1; i < game->m_PlayerCount; i++)
+    {
+        Player* player = game->GetPlayer(i);
+
+        // If the closest player is null (first loop), assign closest as first
+        // player in loop then skip to second loop to continue normal operations
+        if (!closest)
+            closest = player;
+
+        // If player team is not on the same team as localplayer
+        if (player->m_Team != game->m_LocalPlayer->m_Team)
+        {
+            // Get lowest dist between previous closest player and current indexed player
+            if (dist(&game->m_LocalPlayer->m_HeadPos, &player->m_HeadPos) < dist(&game->m_LocalPlayer->m_HeadPos, &closest->m_HeadPos))
+                closest = player;
+        }
+    }
+    
+    return closest;
 }
 
 DWORD WINAPI MainThread(HMODULE hModule)
@@ -31,8 +56,6 @@ DWORD WINAPI MainThread(HMODULE hModule)
     // Get addr of .exe module
     uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
 
-    Vec3 test = { 180, 125, 6 };
-
     // Main cheat loop
     while (true)
     {
@@ -42,10 +65,7 @@ DWORD WINAPI MainThread(HMODULE hModule)
         Game* game = new Game;
         game = game->GetInstance();
 
-        if (game->m_LocalPlayer->m_IsShooting)
-        {
-            std::cout << dist(&game->m_LocalPlayer->m_HeadPos, &test) << std::endl;
-        }
+        Player* closestPlayer = getClosestPlayer(game);
 
         Sleep(5); // Preserve some resources
     }
