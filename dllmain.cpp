@@ -77,6 +77,9 @@ DWORD WINAPI MainThread(HMODULE hModule)
         {
             // Misc
             game->m_LocalPlayer->m_Health = 999;
+            game->m_LocalPlayer->m_PrimaryAmmo = 999;
+            game->m_LocalPlayer->m_SecondaryAmmo = 999;
+            game->m_LocalPlayer->m_GrenadeAmmo = 99;
 
             // Only aimbot when firing gun
             if (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting)
