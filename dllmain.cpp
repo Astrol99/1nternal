@@ -34,21 +34,15 @@ Player* getClosestPlayer(Game* game)
     {
         Player* player = game->GetPlayer(i);
 
-        // If the closest player is null (first loop), assign closest as first
-        // player in loop then skip to second loop to continue normal operations
-        if (i == 1)
-        {
-            closest = player;
+        if (player->m_Team == game->m_LocalPlayer->m_Team || player->m_Health <= 0)
             continue;
-        }
 
-        // If player team is not on the same team as localplayer
-        if (player->m_Team != game->m_LocalPlayer->m_Team)
-        {
-            // Get lowest dist between previous closest player and current indexed player
-            if (dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos) < dist(game->m_LocalPlayer->m_HeadPos, closest->m_HeadPos))
-                closest = player;
-        }
+        if (!closest)
+            closest = player;
+        
+        // Get lowest dist between previous closest player and current indexed player
+        if (dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos) < dist(game->m_LocalPlayer->m_HeadPos, closest->m_HeadPos))
+            closest = player;
     }
     
     return closest;
@@ -75,18 +69,17 @@ DWORD WINAPI MainThread(HMODULE hModule)
         Game* game = new Game;
         game = game->GetInstance();
 
-        Player* closestPlayer = getClosestPlayer(game);
+        if (Player* closestPlayer = getClosestPlayer(game))
+        {
+            // Misc
+            game->m_LocalPlayer->m_Health = 999;
 
-        // Misc
-        game->m_LocalPlayer->m_Health = 999;
+            // Main aimbot calculation stuff
+            Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
 
-        // Main aimbot calculation stuff
-        Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
-
-        game->m_LocalPlayer->m_Yaw = (atan2f(normalized.y, normalized.x) * (180/ M_PI)) + 90;
-        game->m_LocalPlayer->m_Pitch = (atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
-
-        std::cout << normalized.z << std::endl;
+            game->m_LocalPlayer->m_Yaw = (atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
+            game->m_LocalPlayer->m_Pitch = (atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
+        }
 
         Sleep(5); // Preserve some resources
     }
