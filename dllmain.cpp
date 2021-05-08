@@ -34,9 +34,11 @@ Player* getClosestPlayer(Game* game)
     {
         Player* player = game->GetPlayer(i);
 
+        // Skip if current indexed player is either a teammate or dead
         if (player->m_Team == game->m_LocalPlayer->m_Team || player->m_Health <= 0)
             continue;
 
+        // Compensate for nullptr as player closest on first loop
         if (!closest)
             closest = player;
         
@@ -56,6 +58,7 @@ DWORD WINAPI MainThread(HMODULE hModule)
     freopen_s(&f, "CONOUT$", "w", stdout);
 
     std::cout << "1nternal" << std::endl;
+    std::cout << "Press END key to stop" << std::endl;
 
     // Get addr of .exe module
     uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
@@ -69,16 +72,21 @@ DWORD WINAPI MainThread(HMODULE hModule)
         Game* game = new Game;
         game = game->GetInstance();
 
+        // Only run following code if other players are present and valid
         if (Player* closestPlayer = getClosestPlayer(game))
         {
             // Misc
             game->m_LocalPlayer->m_Health = 999;
 
-            // Main aimbot calculation stuff
-            Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
+            // Only aimbot when firing gun
+            if (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting)
+            {
+                // Main aimbot calculation stuff
+                Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
 
-            game->m_LocalPlayer->m_Yaw = (atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
-            game->m_LocalPlayer->m_Pitch = (atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
+                game->m_LocalPlayer->m_Yaw = (atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
+                game->m_LocalPlayer->m_Pitch = (atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
+            }
         }
 
         Sleep(5); // Preserve some resources
