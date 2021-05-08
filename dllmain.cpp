@@ -1,4 +1,4 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
+﻿// dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "structs.h"
 #define _USE_MATH_DEFINES
@@ -57,8 +57,17 @@ DWORD WINAPI MainThread(HMODULE hModule)
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
 
-    std::cout << "1nternal" << std::endl;
-    std::cout << "Press END key to stop" << std::endl;
+    std::cout << R"(
+   /$$               /$$                                             /$$
+ /$$$$              | $$                                            | $$
+|_  $$   /$$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$ | $$
+  | $$  | $$__  $$|_  $$_/   /$$__  $$ /$$__  $$| $$__  $$ |____  $$| $$
+  | $$  | $$  \ $$  | $$    | $$$$$$$$| $$  \__/| $$  \ $$  /$$$$$$$| $$
+  | $$  | $$  | $$  | $$ /$$| $$_____/| $$      | $$  | $$ /$$__  $$| $$
+ /$$$$$$| $$  | $$  |  $$$$/|  $$$$$$$| $$      | $$  | $$|  $$$$$$$| $$
+|______/|__/  |__/   \___/   \_______/|__/      |__/  |__/ \_______/|__/)" << std::endl;
+
+    std::cout << "\nPress END key to stop" << std::endl;
 
     // Get addr of .exe module
     uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
