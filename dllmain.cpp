@@ -6,17 +6,23 @@
 #include <TlHelp32.h>
 #include <cmath>
 
-// 3D Euclidian distance forumula function
-float dist(Vec3* src, Vec3* dst)
+Vec3* normalize(Vec3* src, Vec3* dst)
 {
     // Normalize src to the origin (0,0,0) relative to dst
-    Vec3 normalized = Vec3 {
+    Vec3 normalized = Vec3{
         dst->x - src->x,
         dst->y - src->y,
         dst->z - dst->z
     };
 
-    return sqrtf(powf(normalized.x, 2) + powf(normalized.y, 2) + powf(normalized.z, 2));
+    return &normalized;
+}
+
+// 3D Euclidian distance forumula function
+float dist(Vec3* src, Vec3* dst)
+{
+    Vec3* normalized = normalize(src, dst);
+    return sqrtf(powf(normalized->x, 2) + powf(normalized->y, 2) + powf(normalized->z, 2));
 }
 
 Player* getClosestPlayer(Game* game)
@@ -29,6 +35,7 @@ Player* getClosestPlayer(Game* game)
 
         // If the closest player is null (first loop), assign closest as first
         // player in loop then skip to second loop to continue normal operations
+        // BUGGGGGGGGG RIGHT HEREEEEEEEEEE continue AFTERRRRRR THISSSSSSSSS
         if (!closest)
             closest = player;
 
