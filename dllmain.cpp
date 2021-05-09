@@ -41,9 +41,11 @@ Player* getClosestPlayer(Game* game)
         // Compensate for nullptr as player closest on first loop
         if (!closest)
             closest = player;
-        
+
         // Get lowest dist between previous closest player and current indexed player
-        if (dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos) < dist(game->m_LocalPlayer->m_HeadPos, closest->m_HeadPos))
+        float currentDist = dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos);
+        float closestDist = dist(game->m_LocalPlayer->m_HeadPos, closest->m_HeadPos);
+        if (currentDist < closestDist)
             closest = player;
     }
     
@@ -96,8 +98,8 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 // Main aimbot calculation stuff
                 Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
 
-                game->m_LocalPlayer->m_Yaw = (atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
-                game->m_LocalPlayer->m_Pitch = (atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
+                game->m_LocalPlayer->m_Yaw = (float)(atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
+                game->m_LocalPlayer->m_Pitch = (float)(atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
             }
         }
 
