@@ -75,11 +75,8 @@ DWORD WINAPI MainThread(HMODULE hModule)
     uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
 
     // Main cheat loop
-    while (true)
+    while (!(GetAsyncKeyState(VK_END) & 1))
     {
-        if (GetAsyncKeyState(VK_END) & 1)
-            break;
-
         Game* game = new Game;
         game = game->GetInstance();
 
