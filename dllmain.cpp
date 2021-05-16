@@ -71,14 +71,16 @@ DWORD WINAPI MainThread(HMODULE hModule)
 
     std::cout << "\nPress END key to stop" << std::endl;
 
-    // Get addr of .exe module
-    uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);
+    uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);    // Get addr of .exe module
+    HDC deviceContext = GetDC(FindWindow(0, L"AssaultCube"));   // Get device context from window handle
+
+    HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
 
     // Main cheat loop
     while (!(GetAsyncKeyState(VK_END) & 1))
     {
-        Game* game = new Game;
-        game = game->GetInstance();
+        // Refresh game struct
+        Game* game = game->GetInstance();
 
         // Only run following code if other players are present and valid
         if (Player* closestPlayer = getClosestPlayer(game))
@@ -100,10 +102,12 @@ DWORD WINAPI MainThread(HMODULE hModule)
             }
         }
 
-        Sleep(5); // Preserve some resources
+        Sleep(1); // Preserve some resources
     }
 
-    // Cleanup
+    // Cleanup and exit
+    DeleteObject(brush);
+    DeleteObject(deviceContext);
     if (f)
         fclose(f);
     FreeConsole();
@@ -121,7 +125,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     {
     case DLL_PROCESS_ATTACH:
     {
-        HANDLE hThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, hModule, 0, nullptr);
+        HANDLE hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)MainThread, hModule, NULL, NULL);
         if (hThread)
             CloseHandle(hThread);
     }
