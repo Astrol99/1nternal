@@ -26,32 +26,6 @@ float dist(Vec3 src, Vec3 dst)
     return sqrtf(powf(normalized.x, 2) + powf(normalized.y, 2) + powf(normalized.z, 2));
 }
 
-Player* getClosestPlayer(Game* game)
-{
-    Player* closest = nullptr;
-
-    for (int i = 1; i < game->m_PlayerCount; i++)
-    {
-        Player* player = game->GetPlayer(i);
-
-        // Skip if current indexed player is either a teammate or dead
-        if (player->m_Team == game->m_LocalPlayer->m_Team || player->m_Health <= 0)
-            continue;
-
-        // Compensate for nullptr as player closest on first loop
-        if (!closest)
-            closest = player;
-
-        // Get lowest dist between previous closest player and current indexed player
-        float currentDist = dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos);
-        float closestDist = dist(game->m_LocalPlayer->m_HeadPos, closest->m_HeadPos);
-        if (currentDist < closestDist)
-            closest = player;
-    }
-    
-    return closest;
-}
-
 bool worldToScreen(Vec3 pos, Vec2 &screen)
 {
     ScreenSettings* settings = settings->GetInstance();
@@ -113,14 +87,40 @@ DWORD WINAPI MainThread(HMODULE hModule)
         // Refresh game struct
         Game* game = game->GetInstance();
 
-        // Only run following code if other players are present and valid
-        if (Player* closestPlayer = getClosestPlayer(game))
+        // Only run following code if other players are present
+        if (game->m_PlayerCount > 1)
         {
             // Misc
             game->m_LocalPlayer->m_Health = 999;
             game->m_LocalPlayer->m_PrimaryAmmo = 999;
             game->m_LocalPlayer->m_SecondaryAmmo = 999;
             game->m_LocalPlayer->m_GrenadeAmmo = 99;
+
+            Player* closestPlayer = nullptr;
+
+            // Entity loop
+            for (int i = 1; i < game->m_PlayerCount; i++)
+            {   
+                Player* player = game->GetPlayer(i);
+
+                // Skip if current indexed player is either a teammate or dead
+                if (player->m_Team == game->m_LocalPlayer->m_Team || player->m_Health <= 0)
+                    continue;
+
+                // ESP Stuff
+
+
+                // Getting Closest Player
+                // Compensate for nullptr as player closest on first loop
+                if (!closestPlayer)
+                    closestPlayer = player;
+
+                // Get lowest dist between previous closest player and current indexed player
+                float currentDist = dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos);
+                float closestDist = dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
+                if (currentDist < closestDist)
+                    closestPlayer = player;
+            }
 
             // Only aimbot when firing gun
             if (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting)
@@ -131,9 +131,6 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 game->m_LocalPlayer->m_Yaw = (float)(atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
                 game->m_LocalPlayer->m_Pitch = (float)(atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
             }
-
-            // ESP
-            
         }
 
         Sleep(1); // Preserve some resources
