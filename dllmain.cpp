@@ -52,6 +52,37 @@ Player* getClosestPlayer(Game* game)
     return closest;
 }
 
+bool worldToScreen(Vec3 pos, Vec2 &screen)
+{
+    ScreenSettings* settings = settings->GetInstance();
+    float* viewMatrix = (float*)(VIEW_MATRIX_ADDR); // Built-in assaultcube Model-View-Projection Matrix
+    
+    // Get clip coords by matrix multiplication of world position by view matrix
+    Vec4 clipCoords = {
+        pos.x * viewMatrix[0] + pos.y * viewMatrix[4] + pos.z * viewMatrix[8]  + viewMatrix[12],
+        pos.x * viewMatrix[1] + pos.y * viewMatrix[5] + pos.z * viewMatrix[9]  + viewMatrix[13],
+        pos.x * viewMatrix[2] + pos.y * viewMatrix[6] + pos.z * viewMatrix[10] + viewMatrix[14],
+        pos.x * viewMatrix[3] + pos.y * viewMatrix[7] + pos.z * viewMatrix[11] + viewMatrix[15]
+    };
+
+    // Check if clipcoords are within view
+    if (clipCoords.w < 0.1f)
+        return false;
+
+    // Perspective division - divide clip coords by its w to get Normalized Device Coordinates
+    Vec3 NDC = {
+        clipCoords.x / clipCoords.w,
+        clipCoords.y / clipCoords.w,
+        clipCoords.z / clipCoords.w
+    };
+
+    // Viewport Transform - get actual window coordinates
+    screen.x = (settings->m_Width / 2 * NDC.x) + (NDC.x + settings->m_Width / 2);
+    screen.y = -(settings->m_Height / 2 * NDC.y) + (NDC.y + settings->m_Height / 2);
+
+    return true;
+}
+
 DWORD WINAPI MainThread(HMODULE hModule)
 {
     // Create console from thread
@@ -100,6 +131,9 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 game->m_LocalPlayer->m_Yaw = (float)(atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
                 game->m_LocalPlayer->m_Pitch = (float)(atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
             }
+
+            // ESP
+            
         }
 
         Sleep(1); // Preserve some resources
