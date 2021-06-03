@@ -1,10 +1,21 @@
 #pragma once
 #include <Windows.h>
 #define OFFSET_GAME                0x50F4E8
+#define VIEW_MATRIX_ADDR		   0x501AE8
+
+struct Vec2
+{
+	float x, y;
+};
 
 struct Vec3
 {
 	float x, y, z;
+};
+
+struct Vec4
+{
+	float x, y, z, w;
 };
 
 class Weapon
