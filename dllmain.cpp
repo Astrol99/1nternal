@@ -9,42 +9,40 @@
 
 Vec3 normalize(Vec3 src, Vec3 dst)
 {
-    // Normalize src to the origin (0,0,0) relative to dst
-     Vec3 normalized = Vec3{
+     // Normalize src to the origin (0,0,0) relative to dst
+    return Vec3{
         dst.x - src.x,
         dst.y - src.y,
         dst.z - src.z
     };
-
-    return normalized;
 }
 
 // 3D Euclidian distance forumula function
 float dist(Vec3 src, Vec3 dst)
 {
-    Vec3 normalized = normalize(src, dst);
+    const Vec3 normalized = normalize(src, dst);
     return sqrtf(powf(normalized.x, 2) + powf(normalized.y, 2) + powf(normalized.z, 2));
 }
 
 bool worldToScreen(Vec3 pos, Vec2 &screen)
 {
     ScreenSettings* settings = settings->GetInstance();
-    float* viewMatrix = (float*)(VIEW_MATRIX_ADDR); // Built-in assaultcube Model-View-Projection Matrix
-    
+    const float* viewMatrix = (float*)(VIEW_MATRIX_ADDR); // Built-in assaultcube Model-View-Projection Matrix
+
     // Get clip coords by matrix multiplication of world position by view matrix
-    Vec4 clipCoords = {
+    const Vec4 clipCoords = {
         pos.x * viewMatrix[0] + pos.y * viewMatrix[4] + pos.z * viewMatrix[8]  + viewMatrix[12],
         pos.x * viewMatrix[1] + pos.y * viewMatrix[5] + pos.z * viewMatrix[9]  + viewMatrix[13],
         pos.x * viewMatrix[2] + pos.y * viewMatrix[6] + pos.z * viewMatrix[10] + viewMatrix[14],
         pos.x * viewMatrix[3] + pos.y * viewMatrix[7] + pos.z * viewMatrix[11] + viewMatrix[15]
     };
 
-    // Check if clipcoords are within view
+    // Check if clipcoords are within player view
     if (clipCoords.w < 0.1f)
         return false;
 
     // Perspective division - divide clip coords by its w to get Normalized Device Coordinates
-    Vec3 NDC = {
+    const Vec3 NDC = {
         clipCoords.x / clipCoords.w,
         clipCoords.y / clipCoords.w,
         clipCoords.z / clipCoords.w
@@ -55,6 +53,25 @@ bool worldToScreen(Vec3 pos, Vec2 &screen)
     screen.y = -(settings->m_Height / 2 * NDC.y) + (NDC.y + settings->m_Height / 2);
 
     return true;
+}
+
+void drawBorderBox(HDC& hdc, int thickness, float x, float y, float w, float h)
+{
+    HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
+
+    RECT top = { x, y, w, y + thickness };
+    FillRect(hdc, &top, brush);
+
+    RECT bottom = { x, h, w, h + thickness };
+    FillRect(hdc, &bottom, brush);
+
+    RECT left = { x, y, x + thickness, h };
+    FillRect(hdc, &left, brush);
+
+    RECT right = { w, y, w + thickness, h };
+    FillRect(hdc, &right, brush);
+
+    DeleteObject(brush);
 }
 
 DWORD WINAPI MainThread(HMODULE hModule)
@@ -76,16 +93,17 @@ DWORD WINAPI MainThread(HMODULE hModule)
 
     std::cout << "\nPress END key to stop" << std::endl;
 
-    uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);    // Get addr of .exe module
-    HDC deviceContext = GetDC(FindWindow(0, L"AssaultCube"));   // Get device context from window handle
+    const uintptr_t moduleBase = (uintptr_t)GetModuleHandle(NULL);    // Get addr of .exe module
 
-    HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
+    // GDI related drawing stuff
+    HDC hdc = GetDC(FindWindow(0, L"AssaultCube"));   // Get device context from window handle
 
     // Main cheat loop
     while (!(GetAsyncKeyState(VK_END) & 1))
     {
-        // Refresh game struct
+        // Refresh game-related structs
         Game* game = game->GetInstance();
+        ScreenSettings* settings = settings->GetInstance();
 
         // Only run following code if other players are present
         if (game->m_PlayerCount > 1)
@@ -107,14 +125,23 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 if (player->m_Team == game->m_LocalPlayer->m_Team || player->m_Health <= 0)
                     continue;
 
-                // ESP Stuff
-
-
-                // Getting Closest Player
                 // Compensate for nullptr as player closest on first loop
                 if (!closestPlayer)
                     closestPlayer = player;
 
+                // ESP Stuff
+                Vec2 screenHead;
+                Vec2 screenFeet;
+                const int widthPad = 25;
+                const int heightPad = 10;
+                const int thickness = 1;
+                if (worldToScreen(player->m_HeadPos, screenHead) && worldToScreen(player->m_FootPos, screenFeet))
+                {
+                    // Draw ESP box around enemies with GDI
+                    drawBorderBox(hdc, thickness, screenHead.x - widthPad, screenHead.y - heightPad, screenFeet.x + widthPad, screenFeet.y);
+                }
+            
+                // Getting Closest Player
                 // Get lowest dist between previous closest player and current indexed player
                 float currentDist = dist(game->m_LocalPlayer->m_HeadPos, player->m_HeadPos);
                 float closestDist = dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
@@ -126,8 +153,9 @@ DWORD WINAPI MainThread(HMODULE hModule)
             if (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting)
             {
                 // Main aimbot calculation stuff
-                Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
+                const Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
 
+                // Calculate using basic trigonometry functions to find view angles given length in protrayed triangle between the localplayer and closest enemy
                 game->m_LocalPlayer->m_Yaw = (float)(atan2f(normalized.y, normalized.x) * (180 / M_PI)) + 90;
                 game->m_LocalPlayer->m_Pitch = (float)(atan2f(normalized.z, dist(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos)) * (180 / M_PI));
             }
@@ -137,8 +165,8 @@ DWORD WINAPI MainThread(HMODULE hModule)
     }
 
     // Cleanup and exit
-    DeleteObject(brush);
-    DeleteObject(deviceContext);
+    ReleaseDC(0, hdc);
+    DeleteObject(hdc);
     if (f)
         fclose(f);
     FreeConsole();
