@@ -188,8 +188,8 @@ DWORD WINAPI MainThread(HMODULE hModule)
                     closestPlayer = player;
             }
 
-            // Only aimbot when firing gun
-            if (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting)
+            // Only aimbot when firing gun and enemy is valid
+            if (closestPlayer && (game->m_LocalPlayer->m_IsShooting || game->m_LocalPlayer->m_Shooting))
             {
                 // Main aimbot calculation stuff
                 const Vec3 normalized = normalize(game->m_LocalPlayer->m_HeadPos, closestPlayer->m_HeadPos);
