@@ -74,6 +74,24 @@ void drawBorderBox(HDC& hdc, int thickness, float x, float y, float w, float h)
     DeleteObject(brush);
 }
 
+void drawString(HDC& hdc, int x, int y, COLORREF color, const char* text)
+{
+    HFONT Font = CreateFont(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Roboto"));
+
+    SetTextAlign(hdc, TA_CENTER | TA_NOUPDATECP);
+
+    SetBkColor(hdc, RGB(0, 0, 0));
+    SetBkMode(hdc, TRANSPARENT);
+
+    SetTextColor(hdc, color);
+
+    SelectObject(hdc, Font);
+
+    TextOutA(hdc, x, y, text, strlen(text));
+
+    DeleteObject(Font);
+}
+
 DWORD WINAPI MainThread(HMODULE hModule)
 {
     // Create console from thread
@@ -139,6 +157,7 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 {
                     // Draw ESP box around enemies with GDI
                     drawBorderBox(hdc, thickness, screenHead.x - widthPad, screenHead.y - heightPad, screenFeet.x + widthPad, screenFeet.y);
+                    drawString(hdc, screenFeet.x, screenFeet.y, RGB(255, 255, 255), player->m_Name);
                 }
             
                 // Getting Closest Player
