@@ -55,9 +55,9 @@ bool worldToScreen(Vec3 pos, Vec2 &screen)
     return true;
 }
 
-void drawBorderBox(HDC& hdc, int thickness, float x, float y, float w, float h)
+void drawBorderBox(HDC& hdc, COLORREF color, int thickness, float x, float y, float w, float h)
 {
-    HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
+    HBRUSH brush = CreateSolidBrush(color);
 
     RECT top = { x, y, w, y + thickness };
     FillRect(hdc, &top, brush);
@@ -72,6 +72,13 @@ void drawBorderBox(HDC& hdc, int thickness, float x, float y, float w, float h)
     FillRect(hdc, &right, brush);
 
     DeleteObject(brush);
+}
+
+void drawHealthBox(HDC& hdc, int health, int thickness, float x, float y, float w, float h)
+{
+    // Draw box containing health
+    drawBorderBox(hdc, RGB(255, 255, 255), thickness, x, y, w, h);
+
 }
 
 void drawString(HDC& hdc, int x, int y, COLORREF color, const char* text)
@@ -95,7 +102,7 @@ void drawString(HDC& hdc, int x, int y, COLORREF color, const char* text)
 DWORD WINAPI MainThread(HMODULE hModule)
 {
     // Create console from thread
-    AllocConsole();
+    AllocConsole(); 
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
 
@@ -156,8 +163,9 @@ DWORD WINAPI MainThread(HMODULE hModule)
                 if (worldToScreen(player->m_HeadPos, screenHead) && worldToScreen(player->m_FootPos, screenFeet))
                 {
                     // Draw ESP box around enemies with GDI
-                    drawBorderBox(hdc, thickness, screenHead.x - widthPad, screenHead.y - heightPad, screenFeet.x + widthPad, screenFeet.y);
-                    drawString(hdc, screenFeet.x, screenFeet.y, RGB(255, 255, 255), player->m_Name);
+                    drawBorderBox(hdc, RGB(255,0,0), thickness, screenHead.x - widthPad, screenHead.y - heightPad, screenFeet.x + widthPad, screenFeet.y);
+                    drawHealthBox(hdc, player->m_Health, thickness, screenFeet.x + widthPad + thickness, screenHead.y - heightPad, screenHead.x + widthPad + 10, screenFeet.y);
+                    drawString(hdc, screenFeet.x, screenFeet.y, RGB(255,255,255), player->m_Name);
                 }
             
                 // Getting Closest Player
