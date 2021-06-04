@@ -79,6 +79,13 @@ void drawHealthBox(HDC& hdc, int health, int thickness, float x, float y, float 
     // Draw box containing health
     drawBorderBox(hdc, RGB(255, 255, 255), thickness, x, y, w, h);
 
+    HBRUSH brush = CreateSolidBrush(RGB(0,255,0));
+    
+    float healthPixelHeight = (h - y) * (health / 100.0f);
+    RECT healthBox = { x, h - healthPixelHeight, w, h };
+    FillRect(hdc, &healthBox, brush);
+
+    DeleteObject(brush);
 }
 
 void drawString(HDC& hdc, int x, int y, COLORREF color, const char* text)
